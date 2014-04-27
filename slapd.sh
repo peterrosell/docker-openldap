@@ -11,7 +11,7 @@ set -x
 : LDAP_DOMAIN=${LDAP_DOMAIN}
 : LDAP_ORGANISATION=${LDAP_ORGANISATION}
 
-if [ ! -e /var/lib/ldap/docker_bootstrapped ]; then
+if [ ! -e /var/lib/ldap/docker_slapd_bootstrapped ]; then
   status "configuring slapd for first run"
 
   cat <<EOF | debconf-set-selections
@@ -32,11 +32,11 @@ EOF
 
   dpkg-reconfigure -f noninteractive slapd
 
-  touch /var/lib/ldap/docker_bootstrapped
+  touch /var/lib/ldap/docker_slapd_bootstrapped
 else
   status "found already-configured slapd"
 fi
 
 status "starting slapd"
 set -x
-exec /usr/sbin/slapd -h "ldap:///" -u openldap -g openldap -d 0
+#exec /usr/sbin/slapd -h "ldap:///" -u openldap -g openldap -d 0
