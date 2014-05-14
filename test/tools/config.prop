@@ -1,3 +1,0 @@
-openldapTestImage=openldap-test
-openldapTestContainer=openldap-test-container
-openldapTestDir=/osixia-test-docker-openldap

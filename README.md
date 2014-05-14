@@ -1,15 +1,16 @@
 ## docker-openldap
 
-Fork of Nick Stenning docker-slapd :
-https://github.com/nickstenning/docker-slapd
-
-Add support of tls.
+Fork of : https://github.com/osixia/docker-openldap
 
 ### How to use tls
 
-Add `-v some/host/dir:/etc/ldap/ssl` and `--dns=127.0.0.1` to the run command.
+Add `-v some/host/dir:/data` and `--dns=127.0.0.1` to the run command.
 
-`some/host/dir` must contain a least 3 files :
+/data/etc
+/data/db
+/data/log
+
+`/data/etc` must contain a least 3 files :
 - `ca.crt` certificate authority certificate
 - `ldap.crt` ldap server certificate
 - `ldap.key` ldap server certificate private key
