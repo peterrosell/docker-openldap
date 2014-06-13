@@ -10,11 +10,16 @@ set -x
 : LDAP_ADMIN_PWD=${LDAP_ADMIN_PWD}
 : LDAP_DOMAIN=${LDAP_DOMAIN}
 : LDAP_ORGANISATION=${LDAP_ORGANISATION}
+: LOG_LEVEL=${LOG_LEVEL}
+
+/etc/init.d/rsyslog start
 
 mkdir -p /ext/data/db
+mkdir -p /var/log/ldap/log
+
 
 ### Check if service shall be bootstrapped 
-if [ "$BOOTSTRAP" == "yes" ]; then
+if [ "$BOOTSTRAP" == "true" ]; then
 
   ############ Base config ############
   if [ ! -e /var/run/docker_bootstrapped ]; then
@@ -51,11 +56,14 @@ EOF
   fi
 fi
 
-chown -R openldap:openldap /ext/data
-#chown -R openldap:openldap /etc/ldap
+chown -R openldap:openldap /ext/data/*
+chown -R openldap:openldap /etc/ldap/*
+chown -R openldap:openldap /var/log/ldap/*
+
 
 ############ Dynamic config ############
 slapd -h "ldap:/// ldapi:///" -u openldap -g openldap
+# -f /etc/ldap/slapd.conf
 
 # TLS
 if [ -e /etc/ldap/ssl/ldap.crt ] && [ -e /etc/ldap/ssl/ldap.key ] && [ -e /etc/ldap/ssl/ca.crt ]; then
@@ -90,4 +98,4 @@ sleep 5
 
 status "starting slapd on default port 389"
 set -x
-exec /usr/sbin/slapd -h "ldap:///" -u openldap -g openldap -d 0x8000
+exec /usr/sbin/slapd -h "ldap:///" -u openldap -g openldap
