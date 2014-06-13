@@ -11,10 +11,12 @@ set -x
 : LDAP_DOMAIN=${LDAP_DOMAIN}
 : LDAP_ORGANISATION=${LDAP_ORGANISATION}
 
+/etc/init.d/rsyslog start
+
 mkdir -p /ext/data/db
 
 ### Check if service shall be bootstrapped 
-if [ "$BOOTSTRAP" == "yes" ]; then
+if [ "$BOOTSTRAP" == "true" ]; then
 
   ############ Base config ############
   if [ ! -e /var/run/docker_bootstrapped ]; then

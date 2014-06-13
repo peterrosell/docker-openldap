@@ -1,4 +1,4 @@
-FROM peterrosell/ubuntu-base:trusty
+FROM peterrosell/docker-ubuntu-base:trusty
 MAINTAINER Peter Rosell <peter.rosell@gmail.com>
 
 # Lightly base on https://github.com/osixia/docker-openldap
