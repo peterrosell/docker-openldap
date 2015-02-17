@@ -6,11 +6,20 @@ status () {
   echo "---> ${@}" >&2
 }
 
-set -x
+: DEBUG=${DEBUG}
+if [ $DEBUG == 'true' ]; then
+  set -x
+fi
+
 : LDAP_ADMIN_PWD=${LDAP_ADMIN_PWD}
 : LDAP_DOMAIN=${LDAP_DOMAIN}
 : LDAP_ORGANISATION=${LDAP_ORGANISATION}
 : LOG_LEVEL=${LOG_LEVEL}
+
+
+if [ $1 == 'bootstrap' ]; then
+  exec bash
+fi
 
 /etc/init.d/rsyslog start
 
@@ -18,21 +27,18 @@ mkdir -p /ext/data/db
 mkdir -p /var/log/ldap/log
 
 
-### Check if service shall be bootstrapped 
-if [ "$BOOTSTRAP" == "true" ]; then
+############ Base config ############
+if [ ! -e /var/lib/ldap/docker_bootstrapped ]; then
+  status "configuring slapd for first run"
 
-  ############ Base config ############
-  if [ ! -e /var/run/docker_bootstrapped ]; then
-    status "configuring slapd for first run"
-
-    ### copy files from original directory
-    mkdir -p /var/lib/ldap
-    cp -Rp /var/lib/ldap.original/* /var/lib/ldap
-    mkdir -p /etc/ldap
-    cp -Rp /etc/ldap.original/* /etc/ldap
+  ### copy files from original directory
+#    mkdir -p /var/lib/ldap
+#    cp -Rp /var/lib/ldap.original/* /var/lib/ldap
+#    mkdir -p /etc/ldap
+#    cp -Rp /etc/ldap.original/* /etc/ldap
 
 
-    cat <<EOF | debconf-set-selections
+  cat <<EOF | debconf-set-selections
 slapd slapd/internal/generated_adminpw password ${LDAP_ADMIN_PWD}
 slapd slapd/internal/adminpw password ${LDAP_ADMIN_PWD}
 slapd slapd/password2 password ${LDAP_ADMIN_PWD}
@@ -48,18 +54,23 @@ slapd slapd/no_configuration boolean false
 slapd slapd/dump_database select when needed
 EOF
 
-    dpkg-reconfigure -f noninteractive slapd
+  dpkg-reconfigure -f noninteractive slapd
 
-    touch /var/run/docker_bootstrapped
-  else
-    status "found already-configured slapd"
-  fi
+  ### Move etc to lib directory to be persistent
+  mkdir -p /var/lib/ldap/etc
+  cp -R /etc/ldap/* /var/lib/ldap/etc
+
+  touch /var/lib/ldap/docker_bootstrapped
+else
+  status "found already-configured slapd. Remove /var/lib/ldap if you want a clean database."
 fi
 
-chown -R openldap:openldap /ext/data/*
-chown -R openldap:openldap /etc/ldap/*
-chown -R openldap:openldap /var/log/ldap/*
+rm -rf /etc/ldap
+ln -s /var/lib/ldap/etc /etc/ldap
 
+if [ $1 == 'after_bootstrap' ]; then
+  exec bash
+fi
 
 ############ Dynamic config ############
 slapd -h "ldap:/// ldapi:///" -u openldap -g openldap
@@ -98,4 +109,11 @@ sleep 5
 
 status "starting slapd on default port 389"
 set -x
-exec /usr/sbin/slapd -h "ldap:///" -u openldap -g openldap
+
+echo "$@"
+
+if [ $1 == 'slapd' ]; then
+  exec /usr/sbin/slapd -h "ldap:///" -u openldap -g openldap -d ${LOG_LEVEL}
+else
+  exec $@
+fi
