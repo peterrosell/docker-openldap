@@ -7,5 +7,4 @@ if [ -n "$REGISTRY_TAG" ]; then
 	docker push $REGISTRY_TAG
 fi
 
-echo fig2coreos $NAME fig.yml $SERVICE_DIR
 fig2coreos $NAME fig.yml $SERVICE_DIR
